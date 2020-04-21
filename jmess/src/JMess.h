@@ -26,38 +26,23 @@
 */
 
 
-/*
- * JMess.h
- */
-
 #ifndef __JMESS_H
 #define __JMESS_H
 
 #include <iostream>
 #include <string>
-#include <errno.h>
-
-#include <QIODevice>
-#include <QString>
-#include <QVector>
-#include <QtXml>
-#include <QXmlSimpleReader>
-#include <QXmlInputSource>
-#include <QXmlContentHandler>
+#include <vector>
 
 #include <jack/jack.h>
 
-using namespace std;
-
-const int Indent = 2;
 
 //-------------------------------------------------------------------------------
-/*! \brief Class to save and load all jack client connections.
+/** @brief Small utility to save and load all jack client connections.
  *
- * Saves an XML file with all the current jack connections. This same file can
- * be loaded to connect evrything again. The XML file can also be edited.
+ * Saves a TSV file with all the current jack connections. This same file can
+ * be loaded to connect everything again. The TSV file can also be hand-edited.
  *
- * Has also an option to disconnect all the clients.
+ * Also provides the option to disconnect all.
  */
 //-------------------------------------------------------------------------------
 class JMess {
@@ -67,22 +52,17 @@ public:
   virtual ~JMess();
 
   void disconnectAll();
-  void writeOutput(QString xmlOutFile);
-  void connectPorts(QString xmlInFile);
+  void writeOutput(std::string outfile);
+  void connectPorts(std::string infile);
 
+  struct Connection {
+    std::string read;
+    std::string write;
+  };
 private:
-  void setConnectedPorts();
-  int parseXML(QString xmlInFile);
+  std::vector<Connection> getConnections();
 
-  jack_client_t *mClient; //Class client
-  jack_status_t mStatus; //Class client status
-
-  //Vectors of Connected Ports and Ports to connects
-  //This are a matrix (Nx2) of string like this:
-  //OuputPort1 InputPort1
-  // ...
-  //OuputPortN InputPortN
-  QVector<QVector<QString> > mConnectedPorts;
-  QVector<QVector<QString> > mPortsToConnect;
+  jack_client_t *internal_client_; //Class client
+  jack_status_t internal_status_; //Class client status
 };
 #endif

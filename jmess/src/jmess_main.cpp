@@ -31,8 +31,7 @@
 #include <string>
 #include <getopt.h> // for command line parsing
 
-#include "JMess.h"
-//#include "anyoption.h"
+#include "JMess.cpp"
 
 using namespace std;
 
@@ -149,8 +148,8 @@ void printUsage()
   cout << "Usage: " << endl;
   cout << "--------------------------------------------" << endl;
   cout << " -h  --help                    Prints this help" << endl;
-  cout << " -c  --connect  inputfile.xml  Load the connections specified at inputfile.xml" << endl;
-  cout << " -s  --save  outputfile.xml    Save current connections in output.xml" << endl;
+  cout << " -c  --connect inputfile.tsv   Load the connections specified at inputfile.tsv" << endl;
+  cout << " -s  --save outputfile.tsv     Save current connections in output.tsv" << endl;
   cout << " -d  --disconnectall           Disconnect all the connections" << endl;
   cout << " -D  --DisconnectAll           Disconnect all the connections without confirmation" << endl;
   cout << "" << endl;

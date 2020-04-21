@@ -1,1 +1,0 @@
-Probably add the option to disconnect from an XML file

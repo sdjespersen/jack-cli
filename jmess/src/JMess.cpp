@@ -26,263 +26,119 @@
 */
 
 
-/*
- * JMess.cpp
- */
+#include <jack/jack.h>
+#include <fstream>
+#include <sstream>
 
 #include "JMess.h"
 
-
-//-------------------------------------------------------------------------------
-/*! \brief Constructs a JMess object that has a jack client.
- *
- */
-//-------------------------------------------------------------------------------
+/** @brief Constructs a JMess object with an underlying jack client. */
 JMess::JMess()
 {
-  //Open a client connection to the JACK server.  Starting a
-  //new server only to list its ports seems pointless, so we
-  //specify JackNoStartServer. 
-  mClient = jack_client_open ("lsp", JackNoStartServer, &mStatus);
-  if (mClient == NULL) {
-    if (mStatus & JackServerFailed) {
-      cerr << "JACK server not running" << endl;
+  // Open a client connection to the JACK server.  Starting a
+  // new server only to list its ports seems pointless, so we
+  // specify JackNoStartServer.
+  internal_client_ = jack_client_open("lsp", JackNoStartServer, &internal_status_);
+  if (internal_client_ == NULL) {
+    if (internal_status_ & JackServerFailed) {
+      std::cerr << "JACK server not running" << std::endl;
     } else {
-      cerr << "jack_client_open() failed, " 
-	   << "status = 0x%2.0x\n" << mStatus << endl;
+      std::cerr << "jack_client_open() failed, status = 0x%2.0x\n" << internal_status_ << std::endl;
     }
     exit(1);
   }
 }
 
 
-//-------------------------------------------------------------------------------
-/*! \brief Distructor closes the jmess jack audio client.
- *
- */
-//-------------------------------------------------------------------------------
+/** @brief Class destructor. Closes the internal jack audio client. */
 JMess::~JMess()
 {
-  if (jack_client_close(mClient))
-    cerr << "ERROR: Could not close the hidden jmess jack client." << endl;
+  if (jack_client_close(internal_client_))
+    std::cerr << "ERROR: Could not close the hidden jmess jack client." << std::endl;
 }
 
 
-//-------------------------------------------------------------------------------
-/*! \brief Write an XML file with the name specified at xmlOutFile.
- *
- */
-//-------------------------------------------------------------------------------
-void JMess::writeOutput(QString xmlOutFile)
+// TODO: Default to std::cout with optional file arg.
+/** @brief Write a TSV file with the name specified at outfile. */
+void JMess::writeOutput(std::string outfile)
 {
-  QDomDocument jmess_xml;   QDomElement root;
-  QDomElement connection;   QDomElement output;
-  QDomElement input;        QDomText output_name;
-  QDomText input_name;
-  
-  QVector<QString> OutputInput(2);
+  auto cxns = getConnections();
 
-  this->setConnectedPorts();
-
-  root = jmess_xml.createElement("jmess");
-  for (QVector<QVector<QString> >::iterator it = mConnectedPorts.begin();
-       it != mConnectedPorts.end(); ++it) {
-    OutputInput = *it;
-    //cout << "Output ===> " <<qPrintable(OutputInput[0]) << endl;
-    //cout << "Input ===> " <<qPrintable(OutputInput[1]) << endl;
-
-    //Initialize XML elements
-    connection = jmess_xml.createElement("connection");
-    output = jmess_xml.createElement("output");
-    input = jmess_xml.createElement("input");
-    output_name = jmess_xml.createTextNode(OutputInput[0]);
-    input_name = jmess_xml.createTextNode(OutputInput[1]);
-
-    jmess_xml.appendChild(root);      root.appendChild(connection);
-    connection.appendChild(output);   connection.appendChild(input);
-    output.appendChild(output_name);  input.appendChild(input_name);
+  std::ofstream s(outfile);
+  for (auto it = cxns.begin(); it != cxns.end(); ++it) {
+    s << it->read << "\t" << it->write << std::endl;
   }
+}  
 
-  //Write output file
-  QFile file(xmlOutFile);
-  string answer = "";
-  //Check for existing file first, and confirm before overwriting
-  if (file.exists()) {
-    while ((answer != "yes") && (answer != "no")) {
-      cout << "WARNING: The File " <<qPrintable(xmlOutFile)
-	   << " exists. Do you want to overwrite it? (yes/no): ";
-      cin >> answer;
-    }
-  }
-  else {
-    answer = "yes";
-  }
-
-  if (answer == "yes") {
-    if (!file.open(QIODevice::WriteOnly)) {
-      cerr << "Cannot open file for writing: "
-	   << qPrintable(file.errorString()) << endl;
-      exit(1);
-    }
-    
-    QTextStream out(&file);
-    jmess_xml.save(out, Indent);
-    cout << qPrintable(xmlOutFile) << " written." << endl;
-  }
-}
-  
-
-//-------------------------------------------------------------------------------
-/*! \brief Set list of ouput ports that have connections.
- *
- */
-//-------------------------------------------------------------------------------
-void JMess::setConnectedPorts()
+/** @brief Read the list of output ports that have connections. */
+std::vector<JMess::Connection> JMess::getConnections()
 {
-  mConnectedPorts.clear();
+  std::vector<JMess::Connection> cxns;
 
-  const char **ports, **connections; //vector of ports and connections
-  QVector<QString> OutputInput(2); //helper variable
+  const char **ports, **connections_i; // vector of ports and connections
 
-  //Get active output ports.
-  ports = jack_get_ports (mClient, NULL, NULL, JackPortIsOutput);
-  
-  for (unsigned int out_i = 0; ports[out_i]; ++out_i) {
-    if ((connections = jack_port_get_all_connections 
-	 (mClient, jack_port_by_name(mClient, ports[out_i]))) != 0) {
-      for (unsigned int in_i = 0; connections[in_i]; ++in_i) {
-	OutputInput[0] = ports[out_i];
-	//cout << "Output ===> " <<qPrintable(OutputInput[0]) << endl;
-	OutputInput[1] = connections[in_i];
-	//cout << "Input ===> " << qPrintable(OutputInput[1]) << endl;
-	mConnectedPorts.append(OutputInput);
+  // Get active output ports.
+  ports = jack_get_ports(internal_client_, NULL, NULL, JackPortIsOutput);
+  for (unsigned int i = 0; ports[i]; ++i) {
+    auto port_name = jack_port_by_name(internal_client_, ports[i]);
+    connections_i = jack_port_get_all_connections(internal_client_, port_name);
+    if (connections_i != 0) {
+      for (unsigned int j = 0; connections_i[j]; ++j) {
+      	cxns.push_back({std::string(ports[i]), std::string(connections_i[j])});
       }
     }
   }
 
   free(ports);
+  return cxns;
 }
 
 
-//-------------------------------------------------------------------------------
-/*! \brief Disconnect all the clients.
- *
- */
-//-------------------------------------------------------------------------------
+/** @brief Disconnect all the clients. */
 void JMess::disconnectAll()
 {
-  QVector<QString> OutputInput(2);
+  auto cxns = getConnections();
   
-  this->setConnectedPorts();
-  
-  for (QVector<QVector<QString> >::iterator it = mConnectedPorts.begin();
-       it != mConnectedPorts.end(); ++it) {
-    OutputInput = *it;
-    
-    if (jack_disconnect(mClient, OutputInput[0].toLatin1(), OutputInput[1].toLatin1())) {
-      cerr << "WARNING: port: " << qPrintable(OutputInput[0])
-	   << "and port: " << qPrintable(OutputInput[1])
-	   << " could not be disconnected.\n";
+  for (auto it = cxns.begin(); it != cxns.end(); ++it) {
+    if (jack_disconnect(internal_client_, it->read.c_str(), it->write.c_str())) {
+      std::cerr << "WARNING: port " << it->read << "and port: " << it->write
+          << " could not be disconnected.\n";
     }
   }
-
 }
 
 
-//-------------------------------------------------------------------------------
-/*! \brief Parse the XML input file.
- *
- * Returns 0 on success, or 1 if the file has an incorrect format or cannot 
- * read the file.
- */
-//-------------------------------------------------------------------------------
-int JMess::parseXML(QString xmlInFile)
+/** @brief Parse the file of saved connections. */
+std::vector<JMess::Connection> parseConnectionFile(std::string infile)
 {
-  mPortsToConnect.clear();
-  QString errorStr;
-  int errorLine;
-  int errorColumn;
-  
-  QFile file(xmlInFile);
-  if (!file.open(QIODevice::ReadOnly)) {
-    cerr << "Cannot open file for reading: "
-	 << qPrintable(file.errorString()) << endl;
-    return 1;
+  std::ifstream connections_file(infile);
+  std::vector<JMess::Connection> cxns;
+  std::string line;
+  while (std::getline(connections_file, line)) {
+    std::istringstream iss(line);
+    std::string read, write;
+    iss >> read >> write;
+    cxns.push_back({read, write});
   }
-
-  QDomDocument doc;
-  if (!doc.setContent(&file, true, &errorStr, &errorLine,
-		      &errorColumn)) {
-    cerr << "===================================================\n" 
-	 << "Error parsing XML input file:\n"
-	 << "Parse error at line " << errorLine
-	 << ", column " << errorColumn << "\n"
-	 << qPrintable(errorStr) << "\n"
-	 << "===================================================\n";
-    return 1;
-  }
-  
-  QDomElement jmess = doc.documentElement();
-  if (jmess.tagName() != "jmess") {
-    cerr << "Error: Root tag should be <jmess>: "
-	 << qPrintable(jmess.tagName()) << endl;
-    return 1;
-  }
-
-
-  QVector<QString> OutputInput(2);
-  //First check for <connection> tag
-  for(QDomNode n_cntn = jmess.firstChild(); 
-      !n_cntn.isNull(); n_cntn = n_cntn.nextSibling()) {
-    QDomElement cntn = n_cntn.toElement();
-    if (cntn.tagName() == "connection") {
-      //Now check for ouput & input tag
-      for(QDomNode n_sck = cntn.firstChild(); 
-	  !n_sck.isNull(); n_sck = n_sck.nextSibling()) {
-	QDomElement sck = n_sck.toElement();
-	//cout << qPrintable(sck.tagName()) << endl;
-	//cout << qPrintable(sck.text()) << endl;
-	if (sck.tagName() == "output") {
-	  OutputInput[0] = sck.text();
-	}
-	else if (sck.tagName() == "input") {
-	  OutputInput[1] = sck.text();
-	}
-      }
-      mPortsToConnect.append(OutputInput);
-    }
-  }
-
-  return 0;
-  
+  return cxns;
 }
 
 
-//-------------------------------------------------------------------------------
-/*! \brief Connect ports specified in input XML file xmlInFile
- *
- */
-//-------------------------------------------------------------------------------
-void JMess::connectPorts(QString xmlInFile)
+/** @brief Connect ports specified in input TSV file. */
+void JMess::connectPorts(std::string infile)
 {
-  QVector<QString> OutputInput(2);
+  std::vector<JMess::Connection> cxns = parseConnectionFile(infile);
 
-  if ( !(this->parseXML(xmlInFile)) ) {  
-    for (QVector<QVector<QString> >::iterator it = mPortsToConnect.begin();
-	 it != mPortsToConnect.end(); ++it) {
-      OutputInput = *it;
+  for (auto it = cxns.begin(); it != cxns.end(); ++it) {
+    std::cerr << "Connecting: " << it->read << " => " << it->write << std::endl;
 
-      if (jack_connect(mClient, OutputInput[0].toLatin1(), OutputInput[1].toLatin1())) {
-	//Display a warining only if the error is not because the ports are already
-	//connected, in case the program doesn't display anyting.
-	if (EEXIST != 
-        jack_connect(mClient, OutputInput[0].toLatin1(), OutputInput[1].toLatin1())) {
-	  cerr << "WARNING: port: " << qPrintable(OutputInput[0])
-	       << "and port: " << qPrintable(OutputInput[1])
-	       << " could not be connected.\n";
-	}
+    if (jack_connect(internal_client_, it->read.c_str(), it->write.c_str())) {
+    	// Display a warning only if the error is not because the ports are already
+    	// connected, in case the program doesn't display anyting.
+    	if (EEXIST !=  jack_connect(internal_client_, it->read.c_str(), it->write.c_str())) {
+    	  std::cerr << "WARNING: port: " << it->read << "and port: " << it->write
+  	       << " could not be connected." << std::endl;
       }
     }
   }
-
 }
