@@ -113,7 +113,7 @@ void mainDialog(int argc, char* argv[])
   if (print_cxns)
     jack_cli.printConnections();
   if (!save_to_file.empty())
-    jack_cli.saveConnections(optarg);
+    jack_cli.saveConnections(save_to_file);
 }
 
 

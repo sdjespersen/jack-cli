@@ -59,8 +59,8 @@ JackCli::~JackCli()
 
 void JackCli::saveConnections(std::string outfile)
 {
-  std::ofstream s(outfile);
-  writeConnections(s);
+  std::ofstream os(outfile);
+  writeConnections(os);
 }
 
 void JackCli::printConnections() {
