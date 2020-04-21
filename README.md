@@ -2,112 +2,47 @@
 
 JMess can save an XML file with all the current [Jack Audio](http://jackaudio.org/) connections. This same file can be loaded to connect everything again. The XML file can also be edited. It also also has the option to disconnect all the clients.
 
-## Download and Installation ##
-There is a Linux and a Mac OS X version of JMees. To install just download, uncompress, and follow the instrunctions on `INSTALL.txt`.
+**Why this fork?**
 
-## Using JMess ##
+* No dependence on Qt.
+* TSV is simpler than XML.
 
-To save connections on Jack, use for example [QjackCtl](http://qjackctl.sourceforge.net/) to make the connections you need. To save them, just type in the command line:
+## Installation
 
-`jmess -s filename.xml`
+* clone the repo
+* `make` to build from source
+* `cp jmess /usr/local/bin`
 
-This will save your connections in a file filename.xml. This is an XML file that you can edit, if you want.
+You will need Jack already installed.
 
-To load your connections from a file, just type:
+Provided `Makefile` should work for \*nix systems.
 
-`jmess -c filename.xml`
+## Usage
 
-Note that if you have connections running, the command above is going to connect what was saved on the filename.xml, keeping the connections that you have. If you want to get exactly what was saved on filename.xml, use the flag -d to disonnect all:
+To save connections on Jack, use for example
+[QjackCtl](http://qjackctl.sourceforge.net/) to make the connections you need.
+To save them, just type in the command line:
 
-`jmess -d -c filename.xml`
+`jmess -s jack_connections.tsv`
 
-If you just want to disconnect all from the command line:
+This will save your connections in a two-column tab-separated value format in
+the file `jack_connections.tsv`. This is also hand-editable.
+
+To load your connections from file, use:
+
+`jmess -c jack_connections.tsv`
+
+Note that if you have connections running, the command above will make the
+connections that were saved in `jack_connections.tsv`, leaving intact existing
+connections. (In other words, it will only *add* connections, never remove
+them.) If you want to get exactly the graph represented in
+`jack_connections.tsv`, use the flag `-d` to disconnect all first:
+
+`jmess -d -c jack_connections.tsv`
+
+To disconnect all:
 
 `jmess -d`
 
-For a complete list of options, just type:
-
-`jmess`
-jmess : Build Instructions for Linux and MacOS X
-
-jmess can save an XML file with all the current jack connections. This same file can
-be loaded to connect evrything again. The XML file can also be edited.
-It alse also has the option to disconnect all the clients.
-
----
-MacOS X (10.4 or higher) Installation:
-
-If you are installing on MacOS X, a binary is provided.  You just need to have JackOSX installed on your machine
-http://www.jackosx.com/
-
-TO install (using Terminal): go to bin/ directory and type:
-
-   sudo cp jmess /usr/bin/
-   (enter your password when prompted)
-
-   sudo chmod 755 /usr/bin/jmess
-   (now you can run jmess from any directory using Terminal)
-
----
-Dependencies:
-
-You need to have installed the libraries in your system:
-qt4-devel
-jack-audio-connection-kit-devel
-
-If you are using yum (in Fedora Core 12 for example) you can just install
-them (as root) with:
-yum install qt4-devel jack-audio-connection-kit-devel
-
-
-If you want to build on MacOS X, you need JackOSX
-http://www.jackosx.com/
-and Qt 4.2 or higher. A Binary installer is porvided at:
-http://www.trolltech.com/download?target=ftp://ftp.trolltech.com/qt/source/qt-mac-opensource-4.3.0.dmg
-
-
----
-Build:
-
-to build on Linux or Mac OS X, just go to the /src directory and type the following two command:
-
-   ./build
-
-						    
-If evreything works fine, you will have the excecutable jmess ready to use. It is located at the ../bin directory. If you wish, you can install it in your system. Just type (as root):
-
-   make install
-
-If you want to uninstall:
-
-   make uninstall
-
-
----
-Usage:
-
-For a list a commands, just type:
-./jmess
-
-If you want to save your current connections (connected with qjackctl for example)
-just type:
-
-./jmess -s filename.xml
-
-All your connections are saved in filename.xml.
-
-If you want to load them:
-./jmess -c filename.xml
-						    
-And if you first want to disconnect all and the load the saved connections:
-./jmess -d -c filename.xml
-
-If you just want to disconnect all:
-./jmess -d
-
-
----
-Juan-Pablo Caceres
-Please contact me with bugs, suggestions at:
-jcaceres [at] ccrma [dot] stanford [dot] edu
-
+More exhaustive usage instructions are given if you run `jmess` with no
+arguments.
