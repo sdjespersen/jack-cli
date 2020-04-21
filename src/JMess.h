@@ -36,7 +36,6 @@
 #include <jack/jack.h>
 
 
-//-------------------------------------------------------------------------------
 /** @brief Small utility to save and load all jack client connections.
  *
  * Saves a TSV file with all the current jack connections. This same file can
@@ -44,25 +43,42 @@
  *
  * Also provides the option to disconnect all.
  */
-//-------------------------------------------------------------------------------
 class JMess {
 
-public: 
+public:
+  /** @brief Class constructor. Opens an internal jack client. */
   JMess();
+
+  /** @brief Class destructor. Closes the internal jack client. */
   virtual ~JMess();
 
+  /** @brief Disconnect all input ports from all output ports. */
   void disconnectAll();
-  void writeOutput(std::string outfile);
-  void connectPorts(std::string infile);
 
+  /** @brief Print a TSV of all existing connections to stdout. */
+  void printConnections();
+
+  /** @brief Save a TSV of all existing connections to @a outfile. */
+  void saveConnections(std::string outfile);
+
+  /** @brief Load connections from the TSV file @a infile. */
+  void loadConnections(std::string infile);
+
+  /** @brief A Jack connection from read port (input) to write port (output). */
   struct Connection {
     std::string read;
     std::string write;
   };
+
 private:
+
+  /** @brief Write the list of all connections to the given output stream. */
+  void writeConnections(std::ostream &os);
+
+  /** @brief Return a list of all existing connections. */
   std::vector<Connection> getConnections();
 
-  jack_client_t *internal_client_; //Class client
-  jack_status_t internal_status_; //Class client status
+  jack_client_t *internal_client_;
+  jack_status_t internal_status_;
 };
 #endif

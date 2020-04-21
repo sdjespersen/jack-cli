@@ -32,12 +32,10 @@
 
 #include "JMess.h"
 
-/** @brief Constructs a JMess object with an underlying jack client. */
 JMess::JMess()
 {
-  // Open a client connection to the JACK server.  Starting a
-  // new server only to list its ports seems pointless, so we
-  // specify JackNoStartServer.
+  // Open a client connection to the JACK server.  Starting a new server only to
+  // list its ports seems pointless, so we specify JackNoStartServer.
   internal_client_ = jack_client_open("lsp", JackNoStartServer, &internal_status_);
   if (internal_client_ == NULL) {
     if (internal_status_ & JackServerFailed) {
@@ -50,7 +48,6 @@ JMess::JMess()
 }
 
 
-/** @brief Class destructor. Closes the internal jack audio client. */
 JMess::~JMess()
 {
   if (jack_client_close(internal_client_))
@@ -58,19 +55,23 @@ JMess::~JMess()
 }
 
 
-// TODO: Default to std::cout with optional file arg.
-/** @brief Write a TSV file with the name specified at outfile. */
-void JMess::writeOutput(std::string outfile)
+void JMess::saveConnections(std::string outfile)
 {
-  auto cxns = getConnections();
-
   std::ofstream s(outfile);
+  writeConnections(s);
+}
+
+void JMess::printConnections() {
+  writeConnections(std::cout);
+}
+
+void JMess::writeConnections(std::ostream &os) {
+  auto cxns = getConnections();
   for (auto it = cxns.begin(); it != cxns.end(); ++it) {
-    s << it->read << "\t" << it->write << std::endl;
+    os << it->read << "\t" << it->write << std::endl;
   }
 }
 
-/** @brief Read the list of output ports that have connections. */
 std::vector<JMess::Connection> JMess::getConnections()
 {
   std::vector<JMess::Connection> cxns;
@@ -124,7 +125,7 @@ std::vector<JMess::Connection> parseConnectionFile(std::string infile)
 
 
 /** @brief Connect ports specified in input TSV file. */
-void JMess::connectPorts(std::string infile)
+void JMess::loadConnections(std::string infile)
 {
   std::vector<JMess::Connection> cxns = parseConnectionFile(infile);
 

@@ -61,23 +61,29 @@ void mainDialog(int argc, char* argv[])
   // http://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html#Getopt-Long-Option-Example
   static struct option longopts[] = {
     { "disconnect-all", no_argument, NULL,  'd' },
+    // TODO(sdjespersen): Add the option to make a single new connection
+    // specified on the command line.
     { "load", required_argument, NULL, 'l' },
+    { "print", no_argument, NULL,  'p' },
     { "save", required_argument, NULL,  's' },
     { "help", no_argument, NULL, 'h' }, // Print Help
     { NULL, 0, NULL, 0 }
   };
 
   int ch;
-  while ((ch = getopt_long(argc, argv, "dl:s:h", longopts, NULL)) != -1) {
+  while ((ch = getopt_long(argc, argv, "dl:ps:h", longopts, NULL)) != -1) {
     switch (ch) {
     case 'd':
       jmessClient.disconnectAll();
       break;
     case 'l':
-      jmessClient.connectPorts(optarg);
+      jmessClient.loadConnections(optarg);
+      break;
+    case 'p':
+      jmessClient.printConnections();
       break;
     case 's':
-      jmessClient.writeOutput(optarg);
+      jmessClient.saveConnections(optarg);
       break;
     case 'h':
       printUsage();
@@ -106,9 +112,10 @@ void printUsage()
   std::cout << "" << std::endl;
   std::cout << "Usage: " << std::endl;
   std::cout << "--------------------------------------------" << std::endl;
-  std::cout << " -h  --help                    Prints this help" << std::endl;
-  std::cout << " -c  --connect inputfile.tsv   Load the connections specified at inputfile.tsv" << std::endl;
-  std::cout << " -s  --save outputfile.tsv     Save current connections in output.tsv" << std::endl;
-  std::cout << " -d  --disconnectall           Disconnect all the connections" << std::endl;
+  std::cout << " -h, --help                    Prints this help" << std::endl;
+  std::cout << " -l, --load inputfile.tsv      Load the connections specified at inputfile.tsv" << std::endl;
+  std::cout << " -p, --print                   Print current connections to stdout" << std::endl;
+  std::cout << " -s, --save outputfile.tsv     Save current connections in output.tsv" << std::endl;
+  std::cout << " -d, --disconnect-all          Remove all connections" << std::endl;
   std::cout << "" << std::endl;
 }
