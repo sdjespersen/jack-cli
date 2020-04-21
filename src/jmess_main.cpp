@@ -34,7 +34,7 @@
 #include "JMess.cpp"
 
 void mainDialog(int argc, char* argv[]);
-void printUsage();
+void printUsageAndExit();
 
 
 int main(int argc, char** argv)
@@ -49,20 +49,13 @@ void mainDialog(int argc, char* argv[])
 
   // If no command arguments are given, print instructions
   if (argc == 1) {
-    printUsage();
-    std::exit(0);
+    printUsageAndExit();
   }
-
-  // TODO: Don't attempt to create a connection until arguments have been parsed.
-  // Create JMess Object for the following flags
-  JMess jmessClient;
 
   // Usage example at:
   // http://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html#Getopt-Long-Option-Example
   static struct option longopts[] = {
     { "disconnect-all", no_argument, NULL,  'd' },
-    // TODO(sdjespersen): Add the option to make a single new connection
-    // specified on the command line.
     { "load", required_argument, NULL, 'l' },
     { "print", no_argument, NULL,  'p' },
     { "save", required_argument, NULL,  's' },
@@ -70,24 +63,29 @@ void mainDialog(int argc, char* argv[])
     { NULL, 0, NULL, 0 }
   };
 
+  // Accumulate arguments
+  bool disconnect_all = false;
+  std::string load_from_file;
+  bool print_cxns = false;
+  std::string save_to_file;
+
   int ch;
   while ((ch = getopt_long(argc, argv, "dl:ps:h", longopts, NULL)) != -1) {
     switch (ch) {
     case 'd':
-      jmessClient.disconnectAll();
+      disconnect_all = true;
       break;
     case 'l':
-      jmessClient.loadConnections(optarg);
+      load_from_file = optarg;
       break;
     case 'p':
-      jmessClient.printConnections();
+      print_cxns = true;
       break;
     case 's':
-      jmessClient.saveConnections(optarg);
+      save_to_file = optarg;
       break;
     case 'h':
-      printUsage();
-      break;
+      printUsageAndExit();
     }
   }
 
@@ -102,10 +100,22 @@ void mainDialog(int argc, char* argv[])
     }
     std::cout << "------------------------------------------------------" << std::endl;
   }
+
+  // Finally, take action
+  JMess jmessClient;
+
+  if (disconnect_all)
+    jmessClient.disconnectAll();
+  if (!load_from_file.empty())
+    jmessClient.loadConnections(load_from_file);
+  if (print_cxns)
+    jmessClient.printConnections();
+  if (!save_to_file.empty())
+    jmessClient.saveConnections(optarg);
 }
 
 
-void printUsage()
+void printUsageAndExit()
 {
   std::cout << "JMess: A simple utility so save your jack-audio mess." << std::endl;
   std::cout << "Copyright (C) 2007-2016 Juan-Pablo Caceres." << std::endl;
@@ -118,4 +128,5 @@ void printUsage()
   std::cout << " -s, --save outputfile.tsv     Save current connections in output.tsv" << std::endl;
   std::cout << " -d, --disconnect-all          Remove all connections" << std::endl;
   std::cout << "" << std::endl;
+  exit(0);
 }
