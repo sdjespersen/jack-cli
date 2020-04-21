@@ -1,7 +1,9 @@
 /*
-  JMess: A simple utility so save your jack-audio mess.
+  jackc: A simple command-line JACK client.
 
   Copyright (C) 2007-2010 Juan-Pablo Caceres.
+
+  Major contributions in 2020 by Scott Jespersen.
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
@@ -26,8 +28,8 @@
 */
 
 
-#ifndef __JMESS_H
-#define __JMESS_H
+#ifndef __JACKCLI_H
+#define __JACKCLI_H
 
 #include <iostream>
 #include <string>
@@ -43,14 +45,14 @@
  *
  * Also provides the option to disconnect all.
  */
-class JMess {
+class JackCli {
 
 public:
   /** @brief Class constructor. Opens an internal jack client. */
-  JMess();
+  JackCli();
 
   /** @brief Class destructor. Closes the internal jack client. */
-  virtual ~JMess();
+  virtual ~JackCli();
 
   /** @brief Disconnect all input ports from all output ports. */
   void disconnectAll();

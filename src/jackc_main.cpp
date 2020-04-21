@@ -1,7 +1,9 @@
 /*
-  JMess: A simple utility so save your jack-audio mess.
+  jackc: A simple command-line JACK client.
 
   Copyright (C) 2007-2010 Juan-Pablo Caceres.
+
+  Major contributions in 2020 by Scott Jespersen.
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
@@ -31,7 +33,7 @@
 #include <string>
 #include <getopt.h>
 
-#include "JMess.cpp"
+#include "JackCli.cpp"
 
 void mainDialog(int argc, char* argv[]);
 void printUsageAndExit();
@@ -94,7 +96,7 @@ void mainDialog(int argc, char* argv[])
     std::cout << "------------------------------------------------------" << std::endl;
     std::cout << "WARNING: The following entered options have no effect" << std::endl;
     std::cout << "         and will be ignored!" << std::endl;
-    std::cout << "         Type jmess to see options." << std::endl;
+    std::cout << "         Type jackc to see options." << std::endl;
     for( ; optind < argc; optind++) {
       printf("argument: %s\n", argv[optind]);
     }
@@ -102,23 +104,24 @@ void mainDialog(int argc, char* argv[])
   }
 
   // Finally, take action
-  JMess jmessClient;
+  JackCli jack_cli;
 
   if (disconnect_all)
-    jmessClient.disconnectAll();
+    jack_cli.disconnectAll();
   if (!load_from_file.empty())
-    jmessClient.loadConnections(load_from_file);
+    jack_cli.loadConnections(load_from_file);
   if (print_cxns)
-    jmessClient.printConnections();
+    jack_cli.printConnections();
   if (!save_to_file.empty())
-    jmessClient.saveConnections(optarg);
+    jack_cli.saveConnections(optarg);
 }
 
 
 void printUsageAndExit()
 {
-  std::cout << "JMess: A simple utility so save your jack-audio mess." << std::endl;
+  std::cout << "jackc: A simple command-line JACK client." << std::endl;
   std::cout << "Copyright (C) 2007-2016 Juan-Pablo Caceres." << std::endl;
+  std::cout << "Major contributions in 2020 by Scott Jespersen." << std::endl;
   std::cout << "" << std::endl;
   std::cout << "Usage: " << std::endl;
   std::cout << "--------------------------------------------" << std::endl;

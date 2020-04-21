@@ -1,7 +1,9 @@
 /*
-  JMess: A simple utility so save your jack-audio mess.
+  jackc: A simple command-line JACK client.
 
   Copyright (C) 2007-2010 Juan-Pablo Caceres.
+
+  Major contributions in 2020 by Scott Jespersen.
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
@@ -30,9 +32,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "JMess.h"
+#include "JackCli.h"
 
-JMess::JMess()
+JackCli::JackCli()
 {
   // Open a client connection to the JACK server.  Starting a new server only to
   // list its ports seems pointless, so we specify JackNoStartServer.
@@ -48,33 +50,33 @@ JMess::JMess()
 }
 
 
-JMess::~JMess()
+JackCli::~JackCli()
 {
   if (jack_client_close(internal_client_))
-    std::cerr << "ERROR: Could not close the hidden jmess jack client." << std::endl;
+    std::cerr << "ERROR: Could not close the jack client." << std::endl;
 }
 
 
-void JMess::saveConnections(std::string outfile)
+void JackCli::saveConnections(std::string outfile)
 {
   std::ofstream s(outfile);
   writeConnections(s);
 }
 
-void JMess::printConnections() {
+void JackCli::printConnections() {
   writeConnections(std::cout);
 }
 
-void JMess::writeConnections(std::ostream &os) {
+void JackCli::writeConnections(std::ostream &os) {
   auto cxns = getConnections();
   for (auto it = cxns.begin(); it != cxns.end(); ++it) {
     os << it->read << "\t" << it->write << std::endl;
   }
 }
 
-std::vector<JMess::Connection> JMess::getConnections()
+std::vector<JackCli::Connection> JackCli::getConnections()
 {
-  std::vector<JMess::Connection> cxns;
+  std::vector<JackCli::Connection> cxns;
 
   const char **ports, **connections_i; // vector of ports and connections
 
@@ -95,7 +97,7 @@ std::vector<JMess::Connection> JMess::getConnections()
 
 
 /** @brief Disconnect all the clients. */
-void JMess::disconnectAll()
+void JackCli::disconnectAll()
 {
   auto cxns = getConnections();
 
@@ -109,10 +111,10 @@ void JMess::disconnectAll()
 
 
 /** @brief Parse the TSV file of saved connections. */
-std::vector<JMess::Connection> parseConnectionFile(std::string infile)
+std::vector<JackCli::Connection> parseConnectionFile(std::string infile)
 {
   std::ifstream connections_file(infile);
-  std::vector<JMess::Connection> cxns;
+  std::vector<JackCli::Connection> cxns;
   std::string line;
   while (std::getline(connections_file, line)) {
     std::istringstream iss(line);
@@ -125,9 +127,9 @@ std::vector<JMess::Connection> parseConnectionFile(std::string infile)
 
 
 /** @brief Connect ports specified in input TSV file. */
-void JMess::loadConnections(std::string infile)
+void JackCli::loadConnections(std::string infile)
 {
-  std::vector<JMess::Connection> cxns = parseConnectionFile(infile);
+  std::vector<JackCli::Connection> cxns = parseConnectionFile(infile);
 
   for (auto it = cxns.begin(); it != cxns.end(); ++it) {
     std::cerr << "Connecting: " << it->read << " => " << it->write << std::endl;
