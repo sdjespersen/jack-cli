@@ -34,7 +34,7 @@ the file `jack_connections.tsv`. This is also hand-editable.
 
 To load your connections from file, use:
 
-`jackc -c jack_connections.tsv`
+`jackc -l jack_connections.tsv`
 
 Note that the command above will make the connections that were saved in
 `jack_connections.tsv` *while leaving intact existing connections*. In other
@@ -42,7 +42,7 @@ words, it will only *add* connections, never remove them. If you instead want to
 get exactly the graph represented in `jack_connections.tsv`, use in combination
 with the flag `-d` to disconnect all first:
 
-`jackc -d -c jack_connections.tsv`
+`jackc -d -l jack_connections.tsv`
 
 To disconnect all:
 
