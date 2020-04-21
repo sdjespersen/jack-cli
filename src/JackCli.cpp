@@ -34,60 +34,41 @@
 
 #include "JackCli.h"
 
-JackCli::JackCli()
-{
+JackCli::JackCli() {
   // Open a client connection to the JACK server.  Starting a new server only to
   // list its ports seems pointless, so we specify JackNoStartServer.
-  internal_client_ = jack_client_open("lsp", JackNoStartServer, &internal_status_);
-  if (internal_client_ == NULL) {
-    if (internal_status_ & JackServerFailed) {
+  client_ = jack_client_open("lsp", JackNoStartServer, &status_);
+  if (client_ == NULL) {
+    if (status_ & JackServerFailed) {
       std::cerr << "JACK server not running" << std::endl;
     } else {
-      std::cerr << "jack_client_open() failed, status = 0x%2.0x\n" << internal_status_ << std::endl;
+      std::cerr << "jack_client_open() failed, status = 0x%2.0x\n"
+          << status_ << std::endl;
     }
     exit(1);
   }
 }
 
 
-JackCli::~JackCli()
-{
-  if (jack_client_close(internal_client_))
+JackCli::~JackCli() {
+  if (jack_client_close(client_))
     std::cerr << "ERROR: Could not close the jack client." << std::endl;
 }
 
 
-void JackCli::saveConnections(std::string outfile)
-{
-  std::ofstream os(outfile);
-  writeConnections(os);
-}
-
-void JackCli::printConnections() {
-  writeConnections(std::cout);
-}
-
-void JackCli::writeConnections(std::ostream &os) {
-  auto cxns = getConnections();
-  for (auto it = cxns.begin(); it != cxns.end(); ++it) {
-    os << it->read << "\t" << it->write << std::endl;
-  }
-}
-
-std::vector<JackCli::Connection> JackCli::getConnections()
-{
+std::vector<JackCli::Connection> JackCli::getConnections() {
   std::vector<JackCli::Connection> cxns;
 
   const char **ports, **connections_i; // vector of ports and connections
 
   // Get active output ports.
-  ports = jack_get_ports(internal_client_, NULL, NULL, JackPortIsOutput);
+  ports = jack_get_ports(client_, NULL, NULL, JackPortIsOutput);
   for (unsigned int i = 0; ports[i]; ++i) {
-    auto port_name = jack_port_by_name(internal_client_, ports[i]);
-    connections_i = jack_port_get_all_connections(internal_client_, port_name);
+    auto port_name = jack_port_by_name(client_, ports[i]);
+    connections_i = jack_port_get_all_connections(client_, port_name);
     if (connections_i != 0) {
       for (unsigned int j = 0; connections_i[j]; ++j) {
-      	cxns.push_back({std::string(ports[i]), std::string(connections_i[j])});
+        cxns.push_back({std::string(ports[i]), std::string(connections_i[j])});
       }
     }
   }
@@ -96,13 +77,11 @@ std::vector<JackCli::Connection> JackCli::getConnections()
 }
 
 
-/** @brief Disconnect all the clients. */
-void JackCli::disconnectAll()
-{
+void JackCli::disconnectAll() {
   auto cxns = getConnections();
 
   for (auto it = cxns.begin(); it != cxns.end(); ++it) {
-    if (jack_disconnect(internal_client_, it->read.c_str(), it->write.c_str())) {
+    if (jack_disconnect(client_, it->read.c_str(), it->write.c_str())) {
       std::cerr << "WARNING: port " << it->read << "and port: " << it->write
           << " could not be disconnected.\n";
     }
@@ -110,9 +89,27 @@ void JackCli::disconnectAll()
 }
 
 
+void JackCli::writeConnections(std::ostream &os) {
+  auto cxns = getConnections();
+  for (auto it = cxns.begin(); it != cxns.end(); ++it) {
+    os << it->read << "\t" << it->write << std::endl;
+  }
+}
+
+
+void JackCli::printConnections() {
+  writeConnections(std::cout);
+}
+
+
+void JackCli::saveConnections(std::string outfile) {
+  std::ofstream os(outfile);
+  writeConnections(os);
+}
+
+
 /** @brief Parse the TSV file of saved connections. */
-std::vector<JackCli::Connection> parseConnectionFile(std::string infile)
-{
+std::vector<JackCli::Connection> parseConnectionFile(std::string infile) {
   std::ifstream connections_file(infile);
   std::vector<JackCli::Connection> cxns;
   std::string line;
@@ -126,20 +123,18 @@ std::vector<JackCli::Connection> parseConnectionFile(std::string infile)
 }
 
 
-/** @brief Connect ports specified in input TSV file. */
-void JackCli::loadConnections(std::string infile)
-{
+void JackCli::loadConnections(std::string infile) {
   std::vector<JackCli::Connection> cxns = parseConnectionFile(infile);
 
   for (auto it = cxns.begin(); it != cxns.end(); ++it) {
     std::cerr << "Connecting: " << it->read << " => " << it->write << std::endl;
 
-    if (jack_connect(internal_client_, it->read.c_str(), it->write.c_str())) {
-    	// Display a warning only if the error is not because the ports are already
-    	// connected, in case the program doesn't display anyting.
-    	if (EEXIST !=  jack_connect(internal_client_, it->read.c_str(), it->write.c_str())) {
-    	  std::cerr << "WARNING: port: " << it->read << "and port: " << it->write
-  	       << " could not be connected." << std::endl;
+    if (jack_connect(client_, it->read.c_str(), it->write.c_str())) {
+      // Display a warning only if the error is not because the ports are already
+      // connected, in case the program doesn't display anyting.
+      if (EEXIST !=  jack_connect(client_, it->read.c_str(), it->write.c_str())) {
+        std::cerr << "WARNING: port: " << it->read << "and port: " << it->write
+           << " could not be connected." << std::endl;
       }
     }
   }

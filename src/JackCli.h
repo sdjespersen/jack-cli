@@ -80,7 +80,7 @@ private:
   /** @brief Return a list of all existing connections. */
   std::vector<Connection> getConnections();
 
-  jack_client_t *internal_client_;
-  jack_status_t internal_status_;
+  jack_client_t *client_;
+  jack_status_t status_;
 };
 #endif
