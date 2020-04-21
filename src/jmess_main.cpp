@@ -29,128 +29,86 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
-#include <getopt.h> // for command line parsing
+#include <getopt.h>
 
 #include "JMess.cpp"
 
-using namespace std;
-
-void main_dialog( int argc, char* argv[] );
+void mainDialog(int argc, char* argv[]);
 void printUsage();
-string version  = "1.0.3";
 
 
-//*******************************************************************************
 int main(int argc, char** argv)
 {
-  main_dialog( argc, argv ); 
+  mainDialog(argc, argv);
   return 0;
 }
 
 
-//*******************************************************************************
-void main_dialog( int argc, char* argv[] )
+void mainDialog(int argc, char* argv[])
 {
-  
+
   // If no command arguments are given, print instructions
-  if(argc == 1) {
+  if (argc == 1) {
     printUsage();
     std::exit(0);
   }
 
-  //Create JMess Object for the following flags
+  // TODO: Don't attempt to create a connection until arguments have been parsed.
+  // Create JMess Object for the following flags
   JMess jmessClient;
 
   // Usage example at:
   // http://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html#Getopt-Long-Option-Example
-  // options descriptor
-  //----------------------------------------------------------------------------
   static struct option longopts[] = {
-    // These options don't set a flag.
-    { "disconnectall", no_argument, NULL,  'd' },
-    { "connect", required_argument, NULL, 'c' },
+    { "disconnect-all", no_argument, NULL,  'd' },
+    { "load", required_argument, NULL, 'l' },
     { "save", required_argument, NULL,  's' },
-    { "DisconnectAll", no_argument, NULL,  'D' },
-    { "version", no_argument, NULL, 'v' }, // Version Number
     { "help", no_argument, NULL, 'h' }, // Print Help
     { NULL, 0, NULL, 0 }
   };
 
-
-  // Parse Command Line Arguments
-  //----------------------------------------------------------------------------
-  /// \todo Specify mandatory arguments
-  string answer = "";
   int ch;
-  while ( (ch = getopt_long(argc, argv,
-                            "dc:s:Dvh", longopts, NULL)) != -1 )
+  while ((ch = getopt_long(argc, argv, "dl:s:h", longopts, NULL)) != -1) {
     switch (ch) {
     case 'd':
-    //-------------------------------------------------------
-    //Confirm before disconnection
-    while ((answer != "yes") && (answer != "no")) {
-      cout << "Are you sure you want to disconnect all? (yes/no): ";
-      cin >> answer;
-    }
-    if (answer == "yes") {
       jmessClient.disconnectAll();
-    }
-    break;
-    case 'c':
-    //-------------------------------------------------------
-    jmessClient.connectPorts(optarg);
-    break;
+      break;
+    case 'l':
+      jmessClient.connectPorts(optarg);
+      break;
     case 's':
-    //-------------------------------------------------------
-    jmessClient.writeOutput( optarg );
-    break;
-    case 'D':
-    //-------------------------------------------------------
-    jmessClient.disconnectAll();
-    break;
-    case 'v':
-    //-------------------------------------------------------
-    cout << "JMess VERSION: " << version << endl;
-    cout << "Copyright (c) 2007-2015 Juan-Pablo Caceres." << endl;
-    cout << "SoundWIRE group at CCRMA, Stanford University" << endl;
-    cout << "" << endl;
-    std::exit(0);
-    break;
+      jmessClient.writeOutput(optarg);
+      break;
     case 'h':
-    //-------------------------------------------------------
-    printUsage();
-    break;
+      printUsage();
+      break;
+    }
   }
 
-  // Warn user if undefined options where entered
-  //----------------------------------------------------------------------------
+  // Warn user if undefined options were entered
   if (optind < argc) {
-    cout << "------------------------------------------------------" << endl;
-    cout << "WARINING: The following entered options have no effect" << endl;
-    cout << "          They will be ignored!" << endl;
-    cout << "          Type jmess to see options." << endl;
+    std::cout << "------------------------------------------------------" << std::endl;
+    std::cout << "WARNING: The following entered options have no effect" << std::endl;
+    std::cout << "         and will be ignored!" << std::endl;
+    std::cout << "         Type jmess to see options." << std::endl;
     for( ; optind < argc; optind++) {
       printf("argument: %s\n", argv[optind]);
     }
-    cout << "------------------------------------------------------" << endl;
+    std::cout << "------------------------------------------------------" << std::endl;
   }
 }
 
 
-//*******************************************************************************
 void printUsage()
 {
-  cout << "" << endl;
-  cout << "JMess: A simple utility so save your jack-audio mess." << endl;
-  cout << "Copyright (C) 2007-2016 Juan-Pablo Caceres." << endl;
-  cout << "VERSION: " << version << endl;
-  cout << "" << endl;
-  cout << "Usage: " << endl;
-  cout << "--------------------------------------------" << endl;
-  cout << " -h  --help                    Prints this help" << endl;
-  cout << " -c  --connect inputfile.tsv   Load the connections specified at inputfile.tsv" << endl;
-  cout << " -s  --save outputfile.tsv     Save current connections in output.tsv" << endl;
-  cout << " -d  --disconnectall           Disconnect all the connections" << endl;
-  cout << " -D  --DisconnectAll           Disconnect all the connections without confirmation" << endl;
-  cout << "" << endl;
+  std::cout << "JMess: A simple utility so save your jack-audio mess." << std::endl;
+  std::cout << "Copyright (C) 2007-2016 Juan-Pablo Caceres." << std::endl;
+  std::cout << "" << std::endl;
+  std::cout << "Usage: " << std::endl;
+  std::cout << "--------------------------------------------" << std::endl;
+  std::cout << " -h  --help                    Prints this help" << std::endl;
+  std::cout << " -c  --connect inputfile.tsv   Load the connections specified at inputfile.tsv" << std::endl;
+  std::cout << " -s  --save outputfile.tsv     Save current connections in output.tsv" << std::endl;
+  std::cout << " -d  --disconnectall           Disconnect all the connections" << std::endl;
+  std::cout << "" << std::endl;
 }

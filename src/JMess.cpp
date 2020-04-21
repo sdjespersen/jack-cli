@@ -2,7 +2,7 @@
   JMess: A simple utility so save your jack-audio mess.
 
   Copyright (C) 2007-2010 Juan-Pablo Caceres.
-    
+
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation
   files (the "Software"), to deal in the Software without
@@ -68,7 +68,7 @@ void JMess::writeOutput(std::string outfile)
   for (auto it = cxns.begin(); it != cxns.end(); ++it) {
     s << it->read << "\t" << it->write << std::endl;
   }
-}  
+}
 
 /** @brief Read the list of output ports that have connections. */
 std::vector<JMess::Connection> JMess::getConnections()
@@ -89,7 +89,6 @@ std::vector<JMess::Connection> JMess::getConnections()
     }
   }
 
-  free(ports);
   return cxns;
 }
 
@@ -98,7 +97,7 @@ std::vector<JMess::Connection> JMess::getConnections()
 void JMess::disconnectAll()
 {
   auto cxns = getConnections();
-  
+
   for (auto it = cxns.begin(); it != cxns.end(); ++it) {
     if (jack_disconnect(internal_client_, it->read.c_str(), it->write.c_str())) {
       std::cerr << "WARNING: port " << it->read << "and port: " << it->write
@@ -108,7 +107,7 @@ void JMess::disconnectAll()
 }
 
 
-/** @brief Parse the file of saved connections. */
+/** @brief Parse the TSV file of saved connections. */
 std::vector<JMess::Connection> parseConnectionFile(std::string infile)
 {
   std::ifstream connections_file(infile);
