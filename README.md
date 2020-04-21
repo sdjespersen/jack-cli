@@ -1,4 +1,4 @@
-# `jackc` - A command-line client for [JACK](http://jackaudio.org/)
+# `jackc`: A command-line client for [JACK](http://jackaudio.org/)
 
 `jackc` can:
 * Print a TSV with all current connections to stdout.
