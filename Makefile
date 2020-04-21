@@ -1,8 +1,3 @@
-default:
-	mkdir -p .build
-	g++ -std=c++11 -O3 -W -Wall -Wextra -pedantic -o .build/jackc_main.o -c src/jackc_main.cpp
-	g++ -std=c++11 -O3 -W -Wall -Wextra -pedantic -ljack -o jackc .build/jackc_main.o
+default: src/jackc_main.cpp src/JackCli.cpp src/JackCli.h
+	g++ -std=c++17 -O3 -W -Wall -Wextra -pedantic -ljack -o jackc src/jackc_main.cpp
 
-clean:
-	rm jackc
-	rm -r .build

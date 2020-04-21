@@ -78,11 +78,9 @@ std::vector<JackCli::Connection> JackCli::getConnections() {
 
 
 void JackCli::disconnectAll() {
-  auto cxns = getConnections();
-
-  for (auto it = cxns.begin(); it != cxns.end(); ++it) {
-    if (jack_disconnect(client_, it->read.c_str(), it->write.c_str())) {
-      std::cerr << "WARNING: port " << it->read << "and port: " << it->write
+  for (auto const &cxn : getConnections()) {
+    if (jack_disconnect(client_, cxn.read.c_str(), cxn.write.c_str())) {
+      std::cerr << "WARNING: port " << cxn.read << "and port: " << cxn.write
           << " could not be disconnected.\n";
     }
   }
@@ -124,16 +122,14 @@ std::vector<JackCli::Connection> parseConnectionFile(std::string infile) {
 
 
 void JackCli::loadConnections(std::string infile) {
-  std::vector<JackCli::Connection> cxns = parseConnectionFile(infile);
+  for (auto const &cxn : parseConnectionFile(infile)) {
+    std::cerr << "Connecting: " << cxn.read << " => " << cxn.write << std::endl;
 
-  for (auto it = cxns.begin(); it != cxns.end(); ++it) {
-    std::cerr << "Connecting: " << it->read << " => " << it->write << std::endl;
-
-    if (jack_connect(client_, it->read.c_str(), it->write.c_str())) {
+    if (jack_connect(client_, cxn.read.c_str(), cxn.write.c_str())) {
       // Display a warning only if the error is not because the ports are already
       // connected, in case the program doesn't display anyting.
-      if (EEXIST !=  jack_connect(client_, it->read.c_str(), it->write.c_str())) {
-        std::cerr << "WARNING: port: " << it->read << "and port: " << it->write
+      if (EEXIST !=  jack_connect(client_, cxn.read.c_str(), cxn.write.c_str())) {
+        std::cerr << "WARNING: port: " << cxn.read << "and port: " << cxn.write
            << " could not be connected." << std::endl;
       }
     }

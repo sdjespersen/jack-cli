@@ -48,7 +48,6 @@ int main(int argc, char** argv)
 
 void mainDialog(int argc, char* argv[])
 {
-
   // If no command arguments are given, print instructions
   if (argc == 1) {
     printUsageAndExit();
