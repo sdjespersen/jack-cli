@@ -32,11 +32,11 @@ To load your connections from file, use:
 
 `jmess -c jack_connections.tsv`
 
-Note that if you have connections running, the command above will make the
-connections that were saved in `jack_connections.tsv`, leaving intact existing
-connections. (In other words, it will only *add* connections, never remove
-them.) If you want to get exactly the graph represented in
-`jack_connections.tsv`, use the flag `-d` to disconnect all first:
+Note that the command above will make the connections that were saved in
+`jack_connections.tsv` *while leaving intact existing connections*. In other
+words, it will only *add* connections, never remove them. If you instead want to
+get exactly the graph represented in `jack_connections.tsv`, use in combination
+with the flag `-d` to disconnect all first:
 
 `jmess -d -c jack_connections.tsv`
 
